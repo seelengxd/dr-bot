@@ -148,6 +148,7 @@ async def query_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             'until'] else ""
         result += f"{room}: *{booked_label}*{until_label}\n"
 
+    result = result.replace("-", "\-").replace("=", "\=").replace(".", "\.")
     await update.message.reply_text(result, parse_mode='MarkdownV2')
 
 
@@ -172,7 +173,7 @@ async def query_one(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     for (start, end), reason in room_data:
         result += f"{start.strftime('%I:%M%p')}-{end.strftime('%I:%M%p')}: {reason}\n"
 
-    result = result.replace("-", "\-").replace("=", "\=")
+    result = result.replace("-", "\-").replace("=", "\=").replace(".", "\.")
     await update.message.reply_text(result, parse_mode='MarkdownV2')
 
 
