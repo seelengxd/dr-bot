@@ -146,7 +146,7 @@ async def query_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         booked_label = 'Booked' if room_data['booked'] else "Free"
         until_label = f" until {room_data['until'].strftime('%I:%M%p')}" if room_data[
             'until'] else ""
-        result += f"{room}: *{booked_label}*{until_label}\n"
+        result += f"{room.removeprefix('Room.')}: *{booked_label}*{until_label}\n"
 
     result = result.replace("-", "\-").replace("=", "\=").replace(".", "\.")
     await update.message.reply_text(result, parse_mode='MarkdownV2')
