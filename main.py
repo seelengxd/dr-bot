@@ -8,6 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 import dotenv
 import os
+import pytz
 
 dotenv.load_dotenv()
 
@@ -34,6 +35,7 @@ LOCATION = {
 }
 
 # Scrape room data
+sgt = pytz.timezone("Asia/Singapore")
 
 
 def get_url(room: Room, date_raw: str | datetime):
@@ -42,18 +44,19 @@ def get_url(room: Room, date_raw: str | datetime):
     else:
         date = date_raw
     date = date.strftime("%Y/%m/%d")
-    return f"https://mysoc.nus.edu.sg/~calendar/getBooking.cgi?room={room}&thedate={date}"
+    return f"https://mysoc.nus.edu.sg/~calendar/getBooking.cgi?room={room.removeprefix('Room.')}&thedate={date}"
 
 
 def process_time(date: datetime, time: str):
     result = datetime.strptime(time, "%I:%M%p")
     result = result.replace(year=date.year, month=date.month, day=date.day)
-    return result
+    return sgt.localize(result)
 
 
 def scrape_room(room: Room, date: datetime):
     soup = BeautifulSoup(requests.get(get_url(room, date)
                                       ).content, features="html.parser")
+
     all_tr = soup.find_all("tr")
     content = [[td.text for td in tr.contents] for tr in all_tr]
 
@@ -70,7 +73,7 @@ def scrape_room(room: Room, date: datetime):
 
 
 def get_availability(data):
-    now = datetime.now()
+    now = datetime.now(sgt)
     booked = False
     until = None
     for ((start, end), _) in data:
@@ -98,7 +101,7 @@ def get_availability(data):
 
 def query_today():
     # Scrape today's data
-    today = datetime.today()
+    today = datetime.now(sgt)
     data = {room: {"bookings": scrape_room(room, today)} for room in Room}
 
     for room in data:
@@ -162,7 +165,7 @@ async def query_one(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(
             f"{room} is invalid: must be one of {', '.join([room for room in Room])}.")
         return
-    room_data = scrape_room(room, datetime.today())
+    room_data = scrape_room(room, datetime.today(sgt))
     booked, until = get_availability(room_data)
 
     result = f"{room} - {LOCATION[room]}\n"
