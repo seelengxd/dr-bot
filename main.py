@@ -143,7 +143,7 @@ async def query_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
 
     data = query_today()
-    result = ""
+    result = sgt.localize(datetime.today()).strftime("__%d %b__\n")
     for room in data:
         room_data = data[room]
         booked_label = 'Booked' if room_data['booked'] else "Free"
@@ -165,7 +165,7 @@ async def query_one(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(
             f"{room} is invalid: must be one of {', '.join([room for room in Room])}.")
         return
-    room_data = scrape_room(room, datetime.today(sgt))
+    room_data = scrape_room(room, sgt.localize(datetime.today()))
     booked, until = get_availability(room_data)
 
     result = f"{room} - {LOCATION[room]}\n"
